@@ -1,7 +1,7 @@
 app_name = "Nivora"
 package_name = "com.xiaolin.nivora"
-ver_name = "1.0.1"
-ver_code = "2"
+ver_name = "1.0.2"
+ver_code = "3"
 min_sdk = "26"
 target_sdk = "33"
 debug_mode = false

@@ -1,0 +1,37 @@
+# 运行时数据（应用私有目录才是数据库的家，仓库里不应出现）
+nivora.db
+nivora.db-journal
+nivora.db-wal
+nivora.db-shm
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# 开发期临时探针脚本（docs/TESTING.md 的 probe_*.lua 用完即删）
+probe_*.lua
+probe_*.txt
+
+# IDE 内运行时生成的本地备份目录（activity.getLuaDir("backups")）
+backups/
+
+# 日志与临时输出
+*.log
+*.txt.bak
+~$*
+
+# 构建产物
+build/
+bin/
+out/
+*.apk
+*.ap_
+*.dex
+*.class
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~

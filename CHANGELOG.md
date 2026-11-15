@@ -1,5 +1,30 @@
 # 更新记录
 
+## 1.0.2（发布前审查）
+
+修复发布前审查发现的问题，不新增功能。
+
+### 修复
+
+- **四个主标签页的 `refresh` 是全局函数**：首页、日程、习惯、统计页原本用
+  `function refresh()` 定义（无 `local`），后创建的页面会覆盖先创建页面的
+  `refresh`，导致页面内闭包（按钮回调、编辑器 `onSaved`）在多个标签页
+  加载后调用到**别的页面**的刷新函数，操作错误的视图容器。
+  现改为前向声明 `local refresh` + 赋值，与其余页面一致。
+- **「关于」页显示的版本号落后**：`config/constants.lua` 的 `VERSION`
+  仍是 1.0.0，与 `init.lua` 的 1.0.1 不一致。已同步为 1.0.1。
+- **文档与实际代码不一致**：`AGENTS.md` 项目结构里写了不存在的
+  `data/models|dao` 分层与 `res/drawable/*.lua`（实际图标在
+  `components/icons.lua`）；`docs/DEVELOPMENT.md` 的 `init.lua` 示例
+  版本号落后。均已修正。
+
+### 仓库卫生
+
+- 删除误提交的运行时数据 `nivora.db` 与 `nivora.db-journal`
+  （IDE 内运行时自动生成，删除后应用重建，不影响使用）。
+- 新增 `.gitignore`：数据库文件、`probe_*` 探针脚本、日志、构建产物、
+  IDE 内运行生成的 `backups/` 目录。
+
 ## 1.0.1
 
 修复表单与布局的两处根因问题。

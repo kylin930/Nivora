@@ -14,12 +14,11 @@ main.lua                 仅做初始化与启动
 init.lua                 打包配置（名称/包名/版本/权限/主题）
 config/                  常量与主题
 core/                    数据库、迁移、导航、事件总线、应用组装
-data/models|dao|repositories   数据层；SQL 只允许出现在 dao 层
+data/repositories/       数据层；SQL 只允许出现在仓储层
 modules/<模块>/          业务页面（渲染 + 交互），不写 SQL
-components/              公共 UI 组件、图标、图表
+components/              公共 UI 组件、图标、图表（图标在 icons.lua 用 Canvas 绘制）
 services/                通知、提醒、备份、专注计时
 utils/                   日期、格式化、校验
-res/drawable/*.lua       自定义图标（Canvas 绘制）
 docs/                    架构、数据库、开发、测试文档
 ```
 
@@ -91,6 +90,9 @@ App 被杀掉后，运行时注册的 `BroadcastReceiver` 随之消失，闹钟�
 11. **列表容器用 `addView` 重建**：本项目列表规模小（单页数十条），不使用 RecyclerView，
     以便状态可控；切换 Tab 时保留滚动位置由页面缓存负责。
 12. **`activity.delay(ms, fn)`** 可用，用于防抖与延时刷新；页面销毁时用标志位防止回调操作已销毁视图。
+13. **`until` 是保留字**：表构造器里不能写 `{ until = "..." }`（语法错误），
+    但赋值形式 `rule.until = "..."` 与读取 `rule.until` 合法（实测 `check_lua_syntax` 通过）。
+    `schedules_repo.lua` 的重复规则 `until` 字段正是用赋值形式写入的，勿改成构造器字面量。
 
 ### 3.1 布局表是「声明」，不是 View（最容易踩的坑）
 

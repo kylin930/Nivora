@@ -17,6 +17,7 @@ M.title = "日程"
 function M.create(ctx)
   local app = ctx.app
   local page = { alive = true }
+  local refresh
   local today = dateUtils.today()
   local state = {
     view = app.settings:get("default_calendar_view", "month"),
@@ -260,7 +261,7 @@ function M.create(ctx)
     return children
   end
 
-  function refresh()
+  refresh = function()
     if not page.alive then return end
 
     ui.fill(views.modes, {

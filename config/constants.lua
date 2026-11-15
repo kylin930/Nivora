@@ -2,7 +2,7 @@
 local M = {}
 
 M.APP_NAME = "Nivora"
-M.VERSION = "1.0.0"
+M.VERSION = "1.0.2"
 M.DB_NAME = "nivora.db"
 M.DB_VERSION = 1
 M.BACKUP_FORMAT = 1

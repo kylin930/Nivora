@@ -20,6 +20,7 @@ M.title = "习惯"
 function M.create(ctx)
   local app = ctx.app
   local page = { alive = true }
+  local refresh
   local state = { mode = "today" }
 
   local views = {}
@@ -237,7 +238,7 @@ function M.create(ctx)
     return row
   end
 
-  function refresh()
+  refresh = function()
     if not page.alive then return end
 
     ui.fill(views.modes, {

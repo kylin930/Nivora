@@ -30,6 +30,7 @@ end
 function M.create(ctx)
   local app = ctx.app
   local page = { alive = true }
+  local refresh
 
   local views = {}
   local root = loadlayout({
@@ -310,7 +311,7 @@ function M.create(ctx)
     }
   end
 
-  function refresh()
+  refresh = function()
     if not page.alive then return end
     local children = { header(), progressCard() }
     for _, node in ipairs(habitSection()) do children[#children + 1] = node end

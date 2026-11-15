@@ -16,6 +16,7 @@ M.title = "统计"
 function M.create(ctx)
   local app = ctx.app
   local page = { alive = true }
+  local refresh
 
   local views = {}
   local root = loadlayout({
@@ -198,7 +199,7 @@ function M.create(ctx)
     return ui.card(children)
   end
 
-  function refresh()
+  refresh = function()
     if not page.alive then return end
     ui.fill(views.content, {
       ui.text("统计", { textSize = "22sp", textStyle = "bold", layout_width = "match",

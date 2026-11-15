@@ -17,8 +17,8 @@
 ```lua
 app_name = "Nivora"
 package_name = "com.xiaolin.nivora"
-ver_name = "1.0.0"
-ver_code = "1"
+ver_name = "1.0.2"
+ver_code = "3"
 min_sdk = "26"
 target_sdk = "33"
 NeLuaJ_Theme = "Theme_NeLuaJ_Material3_NoActionBar_ActionOverlay"
