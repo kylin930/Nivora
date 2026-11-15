@@ -1,20 +1,135 @@
 # Nivora
 
-空白页面 / Blank page · `com.xiaolin.nivora`
+个人生活管理中心 · Personal Life Organizer
 
-## 运行与打包 / Run & package
-在 NeLuaJ+ 打开工程根目录，运行 `main.lua`；使用 IDE 的打包功能生成 APK 后安装。
-Open the project root in NeLuaJ+, run `main.lua`, then use the IDE's APK packaging action to install a standalone app. Minimum Android version: 8.0 (API 26).
+Nivora 用 Lua 在 NeLuaJ+ 上构建，是一个原生 Android 应用：习惯打卡、日程、待办、目标、
+每日记录、倒数日、番茄钟与统计集中在一个界面里，数据全部保存在本机 SQLite。
 
-## 修改入口 / Customize
-- `main.lua`: activity entry; explicit content/toolbar/title setup lives in the included `app/screen.lua`.
-- `res/layout/main.lua`: scrollable page layout. Set `showToolbar = false` with a **NoActionBar** theme for a toolbar-free page. System ActionBar themes never add a second toolbar.
-- `res/string/init.lua`: title and English defaults; `zh.lua`: Chinese translations; `en.lua`: English overrides.
-- `init.lua`: package, version, permissions and `NeLuaJ_Theme` (current: `Theme\_NeLuaJ\_Material3\_NoActionBar\_ActionOverlay`). For renamed app titles, update both `app_name` and `res/string/init.lua`'s `app_title`.
-- Theme colors come from the Android theme. Material 3/dynamic, Material Components and Compat are supported; the Compat layout uses standard Android widgets without Material attributes.
-- `app/screen.lua` reads the active Android theme's boolean attributes at runtime. Changes to `init.lua` through project settings take effect on the next launch; no regeneration or second evaluation of `init.lua` is needed.
+- 语言：Lua（LuaJ++ 扩展）
+- 运行时：NeLuaJ+ / LuaJ++ 1.0
+- UI：Material Design 3（Material Components for Android）
+- 数据：SQLite（`android.database.sqlite`）
+- 设置：`app_settings` 表
+- 图表：Canvas 自绘，无第三方图表库
+- 打包：NeLuaJ-Builder
 
-默认无需权限，不保存数据。No permissions or persistent data are needed by this template. Optional modules, if selected, are copied into this project; its runtime never imports the IDE's internal helpers.
+最低 Android 8.0（API 26），已在 Android 15（API 35）真机验证。
 
-验收：分别运行有/无 ActionBar 主题，检查深浅色、大字体和横屏；打包后再独立启动。
-Check light/dark mode, large text and landscape, then launch the installed APK independently.
+---
+
+## 功能
+
+### 首页
+问候语与日期、今日进度（待办 + 习惯，口径不重复）、今日习惯一键打卡、今日待办勾选、
+接下来的日程、最近的倒数日、四个快捷入口。
+
+### 习惯
+- 周期：每天 / 每周指定日期 / 每周完成次数
+- 打卡与撤销、备注、历史记录
+- 统计：当前连续、历史最长、本周、本月、完成率、月历打卡分布
+- 支持暂停习惯；连续天数按**排期日**计算，跳过非计划日，不按记录条数硬算
+
+### 日程
+- 月 / 周 / 日三种视图，按天列出事件
+- 重复规则：不重复 / 每天 / 每周（可选多个星期）/ 每月 / 每年
+- 重复事件只保存规则，按查询区间展开，不预生成无限事件
+- 单个实例可「仅改这一次」「仅删这一次」「删除本次及以后」「删除整个系列」
+- 时间冲突只提示、不阻止保存
+
+### 待办
+- 优先级（低 / 中 / 高）、截止日期、分类、备注、子任务
+- 子任务可独立完成；完成时记录完成时间
+- 视图：今天 / 全部 / 已过期 / 已完成；过期状态按截止日期动态判断
+
+### 目标
+目标 → 里程碑 → 关联任务。进度由里程碑完成比例与关联任务完成比例共同计算，不靠手填百分比。
+
+### 每日记录
+每天最多一条记录，支持正文、心情（5 档）、标签；按日期前后翻页，列出最近记录。
+
+### 倒数日
+生日 / 纪念日 / 考试 / 截止日 / 自定义；支持每年重复（闰年自动回退到 2 月 28 日）与提前提醒。
+
+### 专注
+番茄钟，默认 25 / 5 / 15 分钟。计时状态持久化，按「开始时刻 + 时长」计算剩余时间，
+切后台、页面重建、进程重建后都能恢复，不依赖 UI 刷新频率。
+
+### 统计
+总览（本周/本月完成任务、习惯完成率、本周专注、目标达成）、近 7 天任务完成柱状图、
+近 7 天专注折线图、逐习惯统计、任务状态统计、本周回顾摘要。
+
+### 设置
+外观（浅色 / 深色 / 跟随系统、主题色）、日程（默认提醒、一周起始日、默认视图）、
+习惯（每日提醒时间）、专注（时长与自动休息）、通知权限、
+数据（导出 / 导入 JSON、本地备份、快照恢复、清空）、关于。
+
+---
+
+## 构建
+
+1. 用 NeLuaJ+ 打开本工程根目录（包含 `init.lua` 的目录）。
+2. 运行 `main.lua` 可先在 IDE 内预览。
+3. 打包 APK：在 NeLuaJ+ 中使用打包器（NeLuaJ-Builder）执行构建，产物为可安装 APK。
+
+`init.lua` 声明的权限：
+
+```lua
+user_permission = {
+  "POST_NOTIFICATIONS",      -- 提醒通知（Android 13+ 需运行时授权）
+  "SCHEDULE_EXACT_ALARM",    -- 精确闹钟能力声明
+  "VIBRATE",                 -- 通知震动
+}
+```
+
+权限变更必须重新打包才会生效，IDE 内运行不代表 APK 权限已生效。
+
+---
+
+## 使用
+
+首次启动自动建库并写入 4 个默认分类（工作、个人、学习、健康）。之后：
+
+- 底部导航切换 首页 / 日程 / 习惯 / 统计 / 我的。
+- 右上角 `+` 新建当前页对应的对象；「我的」集中入口可进目标、每日记录、倒数日、专注、待办与设置。
+- 返回键：先回退站内子页面，已在主标签时回到首页，再按一次退出。
+
+---
+
+## 数据与备份
+
+- 数据库文件：应用私有目录下的 `nivora.db`。
+- **导出 / 导入**：设置 → 数据，使用系统文件选择器读写 JSON，不申请存储权限。
+- **本地备份**：写入应用私有目录 `backups/`，可在「从本地备份恢复」中选回。
+- **导入前自动快照**：每次导入会先自动生成一份本地备份；导入在事务中执行，失败自动回滚；
+  格式或版本不合法时直接拒绝，原数据不受影响。
+- 备份格式版本号写在 `format_version` 字段，导入时校验。
+
+---
+
+## 已知限制
+
+**后台提醒依赖应用进程。** NeLuaJ+ 的 `init.lua` 只能声明权限，无法声明清单广播接收器，
+因此闹钟广播只在应用进程存活时送达：
+
+- 应用存活期间到点提醒正常推送；
+- 进程被系统清理后不会独立推送；
+- 重新打开应用会重新排期，并补发最近一小时内已到期的提醒。
+
+这是打包能力的限制，不是遗漏，应用内也如实说明。
+
+其他限制：
+
+- `canScheduleExactAlarms()` 在本机返回 `false`，统一使用 `setAndAllowWhileIdle`（允许待机延迟）。
+- 每日记录暂不支持图片附件。
+- 主题种子色在 Android 12–13 上受系统限制，可能回退为跟随壁纸（NeLuaJ+ 已知行为）。
+
+---
+
+## 文档
+
+- `AGENTS.md`：真机验证过的开发规范与 API 结论（写代码前必读）
+- `docs/ARCHITECTURE.md`：分层、模块、数据流
+- `docs/DATABASE.md`：表结构、索引、迁移
+- `docs/DEVELOPMENT.md`：环境、约定、扩展步骤
+- `docs/TESTING.md`：验证方法与已执行结果
+- `CHANGELOG.md`：版本记录
