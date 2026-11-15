@@ -1,0 +1,9 @@
+app_name = "Nivora"
+package_name = "com.xiaolin.nivora"
+ver_name = "1.0"
+ver_code = "1"
+min_sdk = "26"
+target_sdk = "33"
+debug_mode = true
+NeLuaJ_Theme = "Theme_NeLuaJ_Material3_NoActionBar_ActionOverlay"
+user_permission = {"INTERNET"}
