@@ -227,17 +227,7 @@ function ui.sectionHeader(titleText, actionText, actionHandler, options)
     }),
   }
   if actionText then
-    children[#children + 1] = {
-      MaterialButton,
-      text = actionText,
-      styleAttr = "?attr/borderlessButtonStyle",
-      textSize = "13sp",
-      minWidth = 0,
-      minHeight = "40dp",
-      layout_width = "wrap",
-      layout_height = "wrap",
-      onClick = actionHandler,
-    }
+    children[#children + 1] = ui.textButton(actionText, actionHandler, { textSize = 13 })
   end
   return ui.row(children, {
     layout_marginTop = ui.dp(opts.marginTop or 0),
@@ -246,24 +236,31 @@ function ui.sectionHeader(titleText, actionText, actionHandler, options)
 end
 
 -- ---------- 按钮 ----------
+-- MD3 按钮：40dp 高、全圆角（药丸）、标签不转大写
+local BUTTON_HEIGHT = 40
+local BUTTON_RADIUS = 20
 
 function ui.button(label, onClick, options)
   local opts = options or {}
   local node = {
     MaterialButton,
     text = label,
-    textSize = "14sp",
+    textSize = ui.sp(opts.textSize or 14),
+    -- MD2 会把按钮文字转成全大写，MD3 保持原样
+    allCaps = false,
     layout_width = opts.width or "wrap",
     layout_height = "wrap",
     -- MaterialButton 默认 minWidth 为 88dp，水平筛选条里会溢出被裁掉
     minWidth = 0,
-    minHeight = "44dp",
-    paddingStart = "14dp",
-    paddingEnd = "14dp",
+    minHeight = ui.dp(opts.height or BUTTON_HEIGHT),
+    radius = ui.dp(opts.radius or BUTTON_RADIUS),
+    paddingStart = "16dp",
+    paddingEnd = "16dp",
     onClick = onClick,
   }
   if opts.style then node.style = opts.style end
   if opts.styleAttr then node.styleAttr = opts.styleAttr end
+  if opts.gravity then node.gravity = opts.gravity end
   if opts.icon then
     node.icon = icons.get(opts.icon, theme.colors().primary, 96)
     node.iconGravity = 1
@@ -280,27 +277,32 @@ function ui.button(label, onClick, options)
   return node
 end
 
+-- MD3 文本按钮：无背景，样式由 styleAttr 的 attr 引用决定
 function ui.textButton(label, onClick, options)
   local opts = options or {}
   opts.styleAttr = "?attr/borderlessButtonStyle"
   return ui.button(label, onClick, opts)
 end
 
+-- MD3 描边按钮
 function ui.outlinedButton(label, onClick, options)
   local opts = options or {}
-  opts.style = "?attr/materialButtonOutlinedStyle"
+  opts.styleAttr = "?attr/materialButtonOutlinedStyle"
   return ui.button(label, onClick, opts)
 end
 
+-- MD3 图标按钮：正方形改圆形，靠全圆角实现
 function ui.iconButton(name, onClick, options)
   local opts = options or {}
+  local size = opts.size or 40
   local node = {
     MaterialButton,
     styleAttr = "?attr/borderlessButtonStyle",
-    layout_width = ui.dp(opts.size or 40),
-    layout_height = ui.dp(opts.size or 40),
+    layout_width = ui.dp(size),
+    layout_height = ui.dp(size),
     minWidth = 0,
     minHeight = 0,
+    radius = ui.dp(math.floor(size / 2)),
     padding = "8dp",
     icon = icons.get(name, opts.color or theme.colors().onSurfaceVariant, 96),
     iconGravity = 1,
@@ -533,6 +535,8 @@ end
 
 -- ---------- 输入控件 ----------
 
+-- MD3 描边输入框：1dp 描边、聚焦 2dp，圆角与颜色由 textInputOutlinedStyle 提供，
+-- 因此必须用 styleAttr 传 attr 引用（style 键用于直接资源样式）。
 function ui.textField(id, hintText, options)
   local opts = options or {}
   local edit = {
@@ -540,27 +544,33 @@ function ui.textField(id, hintText, options)
     id = id,
     layout_width = "match",
     layout_height = "wrap",
-    textSize = "15sp",
+    textSize = ui.sp(opts.textSize or 15),
     inputType = opts.inputType or "text",
   }
   if opts.multiline then
     edit.inputType = "textMultiLine"
-    edit.minLines = 2
+    edit.minLines = opts.minLines or 2
     edit.gravity = "top|start"
+  elseif opts.minLines then
+    edit.minLines = opts.minLines
   end
   if opts.maxLength then edit.maxLength = opts.maxLength end
-  if opts.value then edit.text = opts.value end
+  if opts.value then edit.text = tostring(opts.value) end
 
   local box = {
     TextInputLayout,
     id = id .. "Box",
-    layout_width = "match",
+    layout_width = opts.width or "match",
     layout_height = "wrap",
     Hint = hintText,
-    style = "?attr/textInputOutlinedStyle",
+    styleAttr = "?attr/textInputOutlinedStyle",
     layout_marginTop = ui.dp(opts.marginTop or 8),
     edit,
   }
+  if opts.weight then
+    box.layout_width = "0dp"
+    box.layout_weight = opts.weight
+  end
   return box
 end
 

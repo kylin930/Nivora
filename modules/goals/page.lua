@@ -3,8 +3,6 @@ local bindClass = luajava.bindClass
 local LinearLayout = bindClass "android.widget.LinearLayout"
 local ScrollView = bindClass "androidx.core.widget.NestedScrollView"
 local BottomSheetDialog = bindClass "com.google.android.material.bottomsheet.BottomSheetDialog"
-local TextInputLayout = bindClass "com.google.android.material.textfield.TextInputLayout"
-local TextInputEditText = bindClass "com.google.android.material.textfield.TextInputEditText"
 
 local ui = require "components.ui"
 local theme = require "config.theme"
@@ -110,21 +108,7 @@ function M.openDetail(ctx, goalId, onChanged)
   local renderMilestones
   local renderTodos
 
-  local addInput = {
-    TextInputLayout,
-    layout_width = "0dp",
-    layout_weight = 1,
-    layout_height = "wrap",
-    style = "?attr/textInputOutlinedStyle",
-    Hint = "新里程碑",
-    {
-      TextInputEditText,
-      id = "milestoneInput",
-      layout_width = "match",
-      layout_height = "wrap",
-      textSize = "14sp",
-    },
-  }
+  local addInput = ui.textField("milestoneInput", "新里程碑", { weight = 1, textSize = 14 })
   -- 回调在点击时才执行，届时 renderMilestones 已赋值
   local addButton = ui.iconButton("plus", function()
     local text = Form.trim(tostring(sheetViews.milestoneInput.getText()))

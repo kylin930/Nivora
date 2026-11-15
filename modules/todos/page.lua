@@ -2,8 +2,6 @@
 local bindClass = luajava.bindClass
 local LinearLayout = bindClass "android.widget.LinearLayout"
 local BottomSheetDialog = bindClass "com.google.android.material.bottomsheet.BottomSheetDialog"
-local TextInputLayout = bindClass "com.google.android.material.textfield.TextInputLayout"
-local TextInputEditText = bindClass "com.google.android.material.textfield.TextInputEditText"
 local ScrollView = bindClass "androidx.core.widget.NestedScrollView"
 
 local ui = require "components.ui"
@@ -72,21 +70,7 @@ function M.openDetail(ctx, todoId, onChanged)
 
   local renderSubtasks
 
-  local addInput = {
-    TextInputLayout,
-    layout_width = "0dp",
-    layout_weight = 1,
-    layout_height = "wrap",
-    style = "?attr/textInputOutlinedStyle",
-    Hint = "新子任务",
-    {
-      TextInputEditText,
-      id = "subtaskInput",
-      layout_width = "match",
-      layout_height = "wrap",
-      textSize = "14sp",
-    },
-  }
+  local addInput = ui.textField("subtaskInput", "新子任务", { weight = 1, textSize = 14 })
   -- 回调在点击时才执行，届时 renderSubtasks 已赋值
   local addButton = ui.iconButton("plus", function()
     local text = Form.trim(tostring(sheetViews.subtaskInput.getText()))

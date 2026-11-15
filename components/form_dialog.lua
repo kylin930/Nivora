@@ -8,13 +8,10 @@
 local bindClass = luajava.bindClass
 local BottomSheetDialog = bindClass "com.google.android.material.bottomsheet.BottomSheetDialog"
 local LinearLayout = bindClass "android.widget.LinearLayout"
-local MaterialButton = bindClass "com.google.android.material.button.MaterialButton"
 local MaterialTextView = bindClass "com.google.android.material.textview.MaterialTextView"
 local SwitchMaterial = bindClass "com.google.android.material.switchmaterial.SwitchMaterial"
 local Chip = bindClass "com.google.android.material.chip.Chip"
 local ChipGroup = bindClass "com.google.android.material.chip.ChipGroup"
-local TextInputLayout = bindClass "com.google.android.material.textfield.TextInputLayout"
-local TextInputEditText = bindClass "com.google.android.material.textfield.TextInputEditText"
 local MaterialDatePicker = bindClass "com.google.android.material.datepicker.MaterialDatePicker"
 local MaterialTimePicker = bindClass "com.google.android.material.timepicker.MaterialTimePicker"
 local ScrollView = bindClass "androidx.core.widget.NestedScrollView"
@@ -145,30 +142,12 @@ function M.open(spec)
   -- ---------- 文本 / 多行 ----------
   renderers.text = function(field)
     local id = "f_" .. field.key
-    local edit = {
-      TextInputEditText,
-      id = id,
-      layout_width = "match",
-      layout_height = "wrap",
-      textSize = "15sp",
-      text = tostring(values[field.key] or ""),
-    }
-    if field.multiline then
-      edit.inputType = "textMultiLine"
-      edit.minLines = 3
-      edit.gravity = "top|start"
-    else
-      edit.inputType = "text"
-    end
-    container[#container + 1] = {
-      TextInputLayout,
-      layout_width = "match",
-      layout_height = "wrap",
-      Hint = field.label,
-      style = "?attr/textInputOutlinedStyle",
-      layout_marginTop = "12dp",
-      edit,
-    }
+    container[#container + 1] = ui.textField(id, field.label, {
+      multiline = field.multiline == true,
+      minLines = field.multiline and 3 or nil,
+      value = tostring(values[field.key] or ""),
+      marginTop = 12,
+    })
     pending[field.key] = function(bound)
       local input = bound[id]
       return function()
@@ -186,19 +165,13 @@ function M.open(spec)
   -- ---------- 点选列表 ----------
   renderers.choice = function(field)
     local id = "f_" .. field.key
-    container[#container + 1] = {
-      MaterialButton,
-      id = id,
-      text = field.label .. "：" .. optionLabel(field, values[field.key]),
-      styleAttr = "?attr/borderlessButtonStyle",
-      textSize = "14sp",
-      minWidth = 0,
-      minHeight = "44dp",
-      layout_width = "match",
-      layout_height = "wrap",
-      gravity = "start|center_vertical",
-      layout_marginTop = "8dp",
-    }
+    container[#container + 1] = ui.textButton(
+      field.label .. "：" .. optionLabel(field, values[field.key]), nil, {
+        id = id,
+        width = "match",
+        gravity = "start|center_vertical",
+        marginTop = 8,
+      })
     pending[field.key] = function(bound)
       local button = bound[id]
       if button then
@@ -222,20 +195,13 @@ function M.open(spec)
   renderers.date = function(field)
     local id = "f_" .. field.key
     local current = tostring(values[field.key] or "")
-    container[#container + 1] = {
-      MaterialButton,
-      id = id,
-      text = field.label .. "：" ..
-        (current ~= "" and dateUtils.formatDateCN(current) or "未设置"),
-      styleAttr = "?attr/borderlessButtonStyle",
-      textSize = "14sp",
-      minWidth = 0,
-      minHeight = "44dp",
-      layout_width = "match",
-      layout_height = "wrap",
-      gravity = "start|center_vertical",
-      layout_marginTop = "8dp",
-    }
+    container[#container + 1] = ui.textButton(
+      field.label .. "：" .. (current ~= "" and dateUtils.formatDateCN(current) or "未设置"), nil, {
+        id = id,
+        width = "match",
+        gravity = "start|center_vertical",
+        marginTop = 8,
+      })
     pending[field.key] = function(bound)
       local button = bound[id]
       if button then
@@ -261,20 +227,14 @@ function M.open(spec)
   renderers.time = function(field)
     local id = "f_" .. field.key
     local hour, minute = tostring(values[field.key] or ""):match("^(%d+):(%d+)$")
-    container[#container + 1] = {
-      MaterialButton,
-      id = id,
-      text = field.label .. "：" ..
-        (hour and dateUtils.timeLabel(tonumber(hour), tonumber(minute)) or "未设置"),
-      styleAttr = "?attr/borderlessButtonStyle",
-      textSize = "14sp",
-      minWidth = 0,
-      minHeight = "44dp",
-      layout_width = "match",
-      layout_height = "wrap",
-      gravity = "start|center_vertical",
-      layout_marginTop = "8dp",
-    }
+    container[#container + 1] = ui.textButton(
+      field.label .. "：" ..
+        (hour and dateUtils.timeLabel(tonumber(hour), tonumber(minute)) or "未设置"), nil, {
+        id = id,
+        width = "match",
+        gravity = "start|center_vertical",
+        marginTop = 8,
+      })
     pending[field.key] = function(bound)
       local button = bound[id]
       if button then
@@ -451,22 +411,11 @@ function M.open(spec)
   -- ---------- 数字 ----------
   renderers.number = function(field)
     local id = "f_" .. field.key
-    container[#container + 1] = {
-      TextInputLayout,
-      layout_width = "match",
-      layout_height = "wrap",
-      Hint = field.label,
-      style = "?attr/textInputOutlinedStyle",
-      layout_marginTop = "12dp",
-      {
-        TextInputEditText,
-        id = id,
-        layout_width = "match",
-        layout_height = "wrap",
-        inputType = "number",
-        text = tostring(values[field.key] or ""),
-      },
-    }
+    container[#container + 1] = ui.textField(id, field.label, {
+      inputType = "number",
+      value = tostring(values[field.key] or ""),
+      marginTop = 12,
+    })
     pending[field.key] = function(bound)
       local input = bound[id]
       return function()

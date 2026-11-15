@@ -2,8 +2,6 @@
 local bindClass = luajava.bindClass
 local LinearLayout = bindClass "android.widget.LinearLayout"
 local ScrollView = bindClass "androidx.core.widget.NestedScrollView"
-local TextInputLayout = bindClass "com.google.android.material.textfield.TextInputLayout"
-local TextInputEditText = bindClass "com.google.android.material.textfield.TextInputEditText"
 local BottomSheetDialog = bindClass "com.google.android.material.bottomsheet.BottomSheetDialog"
 local Chip = bindClass "com.google.android.material.chip.Chip"
 local ChipGroup = bindClass "com.google.android.material.chip.ChipGroup"
@@ -38,25 +36,12 @@ function M.openEditor(ctx, dateStr, onSaved)
     ui.text(dateUtils.formatDateCN(dateStr), {
       textSize = "18sp", textStyle = "bold", layout_width = "match",
     }),
-    {
-      TextInputLayout,
-      layout_width = "match",
-      layout_height = "wrap",
-      Hint = "今天发生了什么",
-      style = "?attr/textInputOutlinedStyle",
-      layout_marginTop = "12dp",
-      {
-        TextInputEditText,
-        id = "journalEditor",
-        layout_width = "match",
-        layout_height = "wrap",
-        textSize = "15sp",
-        inputType = "textMultiLine",
-        minLines = 6,
-        gravity = "top|start",
-        text = existing and (existing.content or "") or "",
-      },
-    },
+    ui.textField("journalEditor", "今天发生了什么", {
+      multiline = true,
+      minLines = 6,
+      value = existing and (existing.content or "") or "",
+      marginTop = 12,
+    }),
     ui.caption("心情", { layout_marginTop = 12 }),
   }
 
@@ -81,22 +66,11 @@ function M.openEditor(ctx, dateStr, onSaved)
   end
   sheetBody[#sheetBody + 1] = moodGroup
 
-  sheetBody[#sheetBody + 1] = {
-    TextInputLayout,
-    layout_width = "match",
-    layout_height = "wrap",
-    Hint = "标签（用逗号分隔）",
-    style = "?attr/textInputOutlinedStyle",
-    layout_marginTop = "12dp",
-    {
-      TextInputEditText,
-      id = "journalTags",
-      layout_width = "match",
-      layout_height = "wrap",
-      textSize = "14sp",
-      text = existing and (existing.tags or "") or "",
-    },
-  }
+  sheetBody[#sheetBody + 1] = ui.textField("journalTags", "标签（用逗号分隔）", {
+    textSize = 14,
+    value = existing and (existing.tags or "") or "",
+    marginTop = 12,
+  })
 
   sheetBody[#sheetBody + 1] = ui.row({
     ui.textButton("取消", function() sheet.dismiss() end, { weight = 1 }),
