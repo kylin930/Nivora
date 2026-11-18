@@ -94,6 +94,20 @@ function M.openEditor(ctx, dateStr, onSaved)
     return sheet
   end
 
+  -- 布局表里的 checked 对 Chip 不生效（LuaLayout 应用 checkable 晚于 checked），
+  -- 必须在载入后显式恢复，否则编辑已有记录时心情永远不高亮。
+  if moodView then
+    for index, mood in ipairs(constants.MOODS) do
+      local chip = moodView.getChildAt(index - 1)
+      if chip then
+        pcall(function() chip.setCheckable(true) end)
+        pcall(function()
+          chip.setChecked(existing ~= nil and existing.mood == mood.value)
+        end)
+      end
+    end
+  end
+
   saveView.setOnClickListener(function()
     local text = Form.trim(tostring(editorView.getText()))
     if text == "" then

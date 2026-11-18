@@ -104,6 +104,17 @@ M.HABIT_ICONS = {
   "leaf", "pen", "music", "code",
 }
 
+-- 图标的中文标签：表单里只显示英文键名用户无法辨识
+M.HABIT_ICON_LABELS = {
+  check = "勾选", star = "星标", heart = "爱心", book = "阅读",
+  run = "运动", water = "饮水", moon = "睡眠", sun = "早起",
+  leaf = "自然", pen = "写作", music = "音乐", code = "编程",
+}
+
+function M.iconLabel(name)
+  return M.HABIT_ICON_LABELS[name] or tostring(name)
+end
+
 M.CATEGORY_TYPES = {
   { value = "schedule", name = "日程" },
   { value = "todo", name = "待办" },

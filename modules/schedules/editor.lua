@@ -89,7 +89,7 @@ function M.open(ctx, existing, onSaved, occurrence)
       { type = "time", key = "endTime", label = "结束时间", allowEmpty = true },
       { type = "toggle", key = "allDay", label = "全天事件" },
       { type = "choice", key = "freq", label = "重复", options = FREQ_OPTIONS },
-      { type = "weekdays", key = "weekdays", label = "每周重复日" },
+      { type = "weekdays", key = "weekdays", label = "每周重复日（重复选「每周」时生效）" },
       { type = "choice", key = "category_id", label = "分类", options = categoryOptions(app) },
       { type = "choice", key = "reminder", label = "提醒", options = reminderOptions() },
     },

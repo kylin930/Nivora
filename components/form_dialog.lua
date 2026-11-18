@@ -18,9 +18,11 @@ local ScrollView = bindClass "androidx.core.widget.NestedScrollView"
 local LinearLayoutParams = bindClass "android.widget.LinearLayout$LayoutParams"
 
 local ui = require "components.ui"
+local icons = require "components.icons"
 local theme = require "config.theme"
 local constants = require "config.constants"
 local dateUtils = require "utils.date_utils"
+local colorUtils = require "utils.color_utils"
 
 local M = {}
 
@@ -282,8 +284,63 @@ function M.open(spec)
   end
 
   -- ---------- Chip 组 ----------
-  -- 读取时遍历 ChipGroup 的真实子视图，顺序与 entries 一致
-  local function addChipGroup(field, entries, singleSelection)
+  -- chip 必须作为 ChipGroup 的子节点写在同一布局表里，
+  -- loadlayout 才会把它们 addView 进 ChipGroup（顺序与 entries 一致）。
+  -- 读取时遍历 ChipGroup 的真实子视图 getChildAt(index-1)。
+  --
+  -- 注意（真机实测）：布局表里的 checked 对 Chip **不生效**。
+  -- LuaLayout 应用属性时 checkable 晚于 checked，而未 checkable 的 Chip
+  -- 会忽略 setChecked，于是「编辑时看不到当前图标/颜色/打卡日」。
+  -- 因此所有 chip 的选中状态都在 loadlayout 之后由 pending 显式恢复。
+  local function restoreChips(bound, groupId, entries)
+    local groupView = bound[groupId]
+    for index = 1, #entries do
+      local entry = entries[index]
+      local child = groupView and groupView.getChildAt(index - 1)
+      if child then
+        -- 顺序不能颠倒：先 checkable，再 setChecked
+        pcall(function() child.setCheckable(true) end)
+        pcall(function() child.setChecked(false) end)
+        if entry.textColor then
+          pcall(function() child.setTextColor(colorUtils.parse(entry.textColor)) end)
+        end
+        if entry.iconName then
+          pcall(function()
+            child.setChipIcon(icons.get(entry.iconName, theme.colors().onSurfaceVariant, 96))
+            child.setChipIconVisible(true)
+          end)
+        end
+      end
+    end
+    for index = 1, #entries do
+      if entries[index].checked then
+        local child = groupView and groupView.getChildAt(index - 1)
+        if child then pcall(function() child.setChecked(true) end) end
+      end
+    end
+    return groupView
+  end
+
+  -- 单选组：返回选中项的值（无选中时回落到第一项）
+  local function readSingle(group, entries)
+    for index = 1, #entries do
+      local child = group and group.getChildAt(index - 1)
+      if child and child.isChecked() then return entries[index].value end
+    end
+    return entries[1] and entries[1].value
+  end
+
+  -- 多选组：7 个布尔
+  local function readWeekdaySet(group)
+    local days = {}
+    for day = 1, 7 do
+      local child = group and group.getChildAt(day - 1)
+      days[day] = child ~= nil and child.isChecked() == true
+    end
+    return days
+  end
+
+  local function addChipGroup(field, entries, singleSelection, read)
     local groupId = "g_" .. field.key
     local group = {
       ChipGroup,
@@ -300,21 +357,18 @@ function M.open(spec)
         Chip,
         text = entry.text,
         checkable = true,
-        checked = entry.checked == true,
         layout_width = "wrap",
         layout_height = "wrap",
         layout_marginEnd = "6dp",
       }
-      if entry.textColor then chip.textColor = entry.textColor end
       group[#group + 1] = chip
     end
     container[#container + 1] = group
 
-    local function groupView(bound)
-      return bound[groupId]
+    pending[field.key] = function(bound)
+      local groupView = restoreChips(bound, groupId, entries)
+      return function() return read(groupView, entries) end
     end
-
-    return groupView
   end
 
   renderers.priority = function(field)
@@ -326,17 +380,7 @@ function M.open(spec)
         checked = values[field.key] == item.value,
       }
     end
-    local groupView = addChipGroup(field, entries, true)
-    pending[field.key] = function(bound)
-      local group = groupView(bound)
-      return function()
-        for index = 1, #entries do
-          local child = group and group.getChildAt(index - 1)
-          if child and child.isChecked() then return entries[index].value end
-        end
-        return entries[1].value
-      end
-    end
+    addChipGroup(field, entries, true, readSingle)
   end
 
   renderers.color = function(field)
@@ -349,39 +393,21 @@ function M.open(spec)
         checked = values[field.key] == hex,
       }
     end
-    local groupView = addChipGroup(field, entries, true)
-    pending[field.key] = function(bound)
-      local group = groupView(bound)
-      return function()
-        for index = 1, #entries do
-          local child = group and group.getChildAt(index - 1)
-          if child and child.isChecked() then return entries[index].value end
-        end
-        return entries[1].value
-      end
-    end
+    addChipGroup(field, entries, true, readSingle)
   end
 
+  -- 图标 chip：中文标签 + 图形，避免用户面对 check / leaf 这类英文键名
   renderers.icon = function(field)
     local entries = {}
     for _, name in ipairs(constants.HABIT_ICONS) do
       entries[#entries + 1] = {
-        text = name,
+        text = constants.iconLabel(name),
         value = name,
+        iconName = name,
         checked = values[field.key] == name,
       }
     end
-    local groupView = addChipGroup(field, entries, true)
-    pending[field.key] = function(bound)
-      local group = groupView(bound)
-      return function()
-        for index = 1, #entries do
-          local child = group and group.getChildAt(index - 1)
-          if child and child.isChecked() then return entries[index].value end
-        end
-        return entries[1].value
-      end
-    end
+    addChipGroup(field, entries, true, readSingle)
   end
 
   renderers.weekdays = function(field)
@@ -394,18 +420,7 @@ function M.open(spec)
         checked = current[day] == true,
       }
     end
-    local groupView = addChipGroup(field, entries, false)
-    pending[field.key] = function(bound)
-      local group = groupView(bound)
-      return function()
-        local days = {}
-        for day = 1, 7 do
-          local child = group and group.getChildAt(day - 1)
-          days[day] = child ~= nil and child.isChecked() == true
-        end
-        return days
-      end
-    end
+    addChipGroup(field, entries, false, readWeekdaySet)
   end
 
   -- ---------- 数字 ----------
